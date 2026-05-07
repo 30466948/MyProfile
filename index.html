@@ -99,7 +99,7 @@
   .add-card h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .add-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 80px auto;
+    grid-template-columns: 2fr 1fr 1fr 1fr 80px auto;
     gap: 10px;
   }
   @media (max-width: 720px) {
@@ -107,6 +107,7 @@
     .add-row .add-title { grid-column: 1 / -1; }
     .add-row .add-submit { grid-column: 1 / -1; }
   }
+  .chore .title[data-action="edit"] { cursor: text; }
   .add-row input, .add-row select {
     border: 1px solid var(--line);
     border-radius: 10px;
@@ -212,18 +213,42 @@
     font-size: 11px;
     font-weight: 700;
   }
-  .chore .delete {
+  .chore .icon-btn {
     background: none; border: none;
     color: var(--muted);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     padding: 4px 8px;
     border-radius: 6px;
     opacity: 0;
     transition: opacity 0.15s, background 0.12s;
   }
-  .chore:hover .delete { opacity: 1; }
-  .chore .delete:hover { background: #ffe6e0; color: #b03a22; }
+  .chore:hover .icon-btn { opacity: 1; }
+  .chore .icon-btn.edit:hover { background: var(--teal-soft); color: #1f7a70; }
+  .chore .icon-btn.delete:hover { background: #ffe6e0; color: #b03a22; }
+  .badge.recurring { background: #ede7ff; color: #5b3ec5; }
+  .floater {
+    position: fixed;
+    pointer-events: none;
+    font-weight: 700;
+    color: var(--teal);
+    font-size: 18px;
+    animation: floatUp 0.9s ease-out forwards;
+    z-index: 999;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) scale(0.8); opacity: 0; }
+    20%  { transform: translateY(-6px) scale(1.1); opacity: 1; }
+    100% { transform: translateY(-46px) scale(1); opacity: 0; }
+  }
+  .title-input {
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 15px;
+    font-family: inherit;
+    width: 100%;
+  }
 
   .empty {
     text-align: center;
@@ -280,6 +305,11 @@
       <form class="add-row" id="addForm">
         <input class="add-title" id="newTitle" type="text" placeholder="e.g. Take out the trash" required />
         <select id="newAssignee" required></select>
+        <select id="newRecurring">
+          <option value="">One-time</option>
+          <option value="daily">🔄 Daily</option>
+          <option value="weekly">🔄 Weekly</option>
+        </select>
         <input id="newDue" type="date" />
         <input id="newPoints" type="number" min="1" max="50" value="5" />
         <button class="add-submit" type="submit">＋ Add</button>
@@ -331,14 +361,19 @@
   }
 
   const SEED = [
-    { id: crypto.randomUUID(), title: 'Take out the trash',     assignee: 'omar', due: todayISO(0),  points: 5,  done: false, createdAt: Date.now() },
-    { id: crypto.randomUUID(), title: 'Load the dishwasher',    assignee: 'aya',  due: todayISO(0),  points: 5,  done: false, createdAt: Date.now() },
-    { id: crypto.randomUUID(), title: 'Walk the dog',           assignee: 'dad',  due: todayISO(0),  points: 8,  done: true,  createdAt: Date.now() - 86400000 },
-    { id: crypto.randomUUID(), title: 'Vacuum living room',     assignee: 'mom',  due: todayISO(2),  points: 10, done: false, createdAt: Date.now() },
-    { id: crypto.randomUUID(), title: 'Water the plants',       assignee: 'aya',  due: todayISO(1),  points: 3,  done: false, createdAt: Date.now() },
-    { id: crypto.randomUUID(), title: 'Fold laundry',           assignee: 'mom',  due: todayISO(3),  points: 7,  done: false, createdAt: Date.now() },
-    { id: crypto.randomUUID(), title: 'Tidy bedroom',           assignee: 'omar', due: todayISO(-1), points: 6,  done: false, createdAt: Date.now() - 86400000 },
-    { id: crypto.randomUUID(), title: 'Empty dishwasher',       assignee: 'aya',  due: todayISO(-1), points: 5,  done: true,  createdAt: Date.now() - 86400000 },
+    { id: crypto.randomUUID(), title: 'Take out the trash',     assignee: 'omar', due: todayISO(0),  points: 5,  done: false, createdAt: Date.now(),                  recurring: 'weekly' },
+    { id: crypto.randomUUID(), title: 'Load the dishwasher',    assignee: 'aya',  due: todayISO(0),  points: 5,  done: false, createdAt: Date.now(),                  recurring: 'daily'  },
+    { id: crypto.randomUUID(), title: 'Walk the dog',           assignee: 'dad',  due: todayISO(0),  points: 8,  done: true,  createdAt: Date.now() - 86400000,       recurring: null     },
+    { id: crypto.randomUUID(), title: 'Vacuum living room',     assignee: 'mom',  due: todayISO(2),  points: 10, done: false, createdAt: Date.now(),                  recurring: 'weekly' },
+    { id: crypto.randomUUID(), title: 'Water the plants',       assignee: 'aya',  due: todayISO(1),  points: 3,  done: false, createdAt: Date.now(),                  recurring: null     },
+    { id: crypto.randomUUID(), title: 'Fold laundry',           assignee: 'mom',  due: todayISO(3),  points: 7,  done: false, createdAt: Date.now(),                  recurring: null     },
+    { id: crypto.randomUUID(), title: 'Tidy bedroom',           assignee: 'omar', due: todayISO(-1), points: 6,  done: false, createdAt: Date.now() - 86400000,       recurring: null     },
+    { id: crypto.randomUUID(), title: 'Empty dishwasher',       assignee: 'aya',  due: todayISO(-1), points: 5,  done: true,  createdAt: Date.now() - 86400000,       recurring: null     },
+  ];
+
+  const SEED_COMPLETIONS = [
+    { assignee: 'dad',  points: 8, at: Date.now() - 2 * 86400000, title: 'Walk the dog' },
+    { assignee: 'aya',  points: 5, at: Date.now() - 86400000,     title: 'Empty dishwasher' },
   ];
 
   let state = load();
@@ -347,9 +382,13 @@
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (!parsed.completions) parsed.completions = [];
+        return parsed;
+      }
     } catch (e) {}
-    return { chores: SEED };
+    return { chores: SEED, completions: SEED_COMPLETIONS };
   }
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -361,9 +400,19 @@
 
   function pointsThisWeek(memberId) {
     const weekAgo = Date.now() - 7 * 86400000;
-    return state.chores
-      .filter(c => c.done && c.assignee === memberId && c.createdAt >= weekAgo)
+    const fromOneTime = state.chores
+      .filter(c => c.done && !c.recurring && c.assignee === memberId && c.createdAt >= weekAgo)
       .reduce((s, c) => s + (c.points || 0), 0);
+    const fromRecurring = (state.completions || [])
+      .filter(c => c.assignee === memberId && c.at >= weekAgo)
+      .reduce((s, c) => s + (c.points || 0), 0);
+    return fromOneTime + fromRecurring;
+  }
+
+  function nextDue(currentDue, recurring) {
+    const base = new Date((currentDue || todayISO(0)) + 'T00:00:00');
+    base.setDate(base.getDate() + (recurring === 'weekly' ? 7 : 1));
+    return base.toISOString().slice(0, 10);
   }
 
   function renderMembers() {
@@ -409,6 +458,9 @@
       else if (c.due === today) dueBadge = `<span class="badge due-today">Due today</span>`;
       else dueBadge = `<span style="color:var(--muted)">Due ${formatDue(c.due)}</span>`;
     }
+    const recurringBadge = c.recurring
+      ? `<span class="badge recurring">🔄 ${c.recurring}</span>`
+      : '';
     return `
       <div class="chore ${c.done ? 'done' : ''}" data-id="${c.id}">
         <div class="check" data-action="toggle">
@@ -417,16 +469,18 @@
           </svg>
         </div>
         <div class="body">
-          <div class="title">${escapeHtml(c.title)}</div>
+          <div class="title" data-action="edit" title="Click to edit">${escapeHtml(c.title)}</div>
           <div class="meta">
             <span class="badge" style="background:${m.color}22;color:${m.color}">
               <span class="dot" style="background:${m.color}"></span>${m.name}
             </span>
             <span class="points">+${c.points} pts</span>
+            ${recurringBadge}
             ${dueBadge}
           </div>
         </div>
-        <button class="delete" data-action="delete" title="Delete">×</button>
+        <button class="icon-btn edit" data-action="edit" title="Edit">✎</button>
+        <button class="icon-btn delete" data-action="delete" title="Delete">×</button>
       </div>`;
   }
 
@@ -507,12 +561,49 @@
       points: parseInt(document.getElementById('newPoints').value, 10) || 5,
       done: false,
       createdAt: Date.now(),
+      recurring: document.getElementById('newRecurring').value || null,
     };
     state.chores.unshift(chore);
     document.getElementById('newTitle').value = '';
-    document.getElementById('newDue').value = '';
+    document.getElementById('newRecurring').value = '';
+    document.getElementById('newDue').value = todayISO(0);
     render();
   });
+
+  function showFloater(targetEl, text) {
+    if (!targetEl) return;
+    const rect = targetEl.getBoundingClientRect();
+    const f = document.createElement('div');
+    f.className = 'floater';
+    f.textContent = text;
+    f.style.left = (rect.left + rect.width / 2 - 18) + 'px';
+    f.style.top = (rect.top - 6) + 'px';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 900);
+  }
+
+  function startEdit(choreEl, id) {
+    const c = state.chores.find(x => x.id === id);
+    if (!c) return;
+    const titleEl = choreEl.querySelector('.title');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'title-input';
+    input.value = c.title;
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
+    const commit = () => {
+      const v = input.value.trim();
+      if (v) c.title = v;
+      render();
+    };
+    input.addEventListener('blur', commit, { once: true });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.value = c.title; input.blur(); }
+    });
+  }
 
   document.body.addEventListener('click', e => {
     const action = e.target.closest('[data-action]');
@@ -520,13 +611,29 @@
     const choreEl = e.target.closest('.chore');
     const id = choreEl?.dataset.id;
     if (!id) return;
+    const c = state.chores.find(x => x.id === id);
+    if (!c) return;
+
     if (action.dataset.action === 'toggle') {
-      const c = state.chores.find(x => x.id === id);
-      if (c) c.done = !c.done;
+      if (c.recurring) {
+        state.completions.push({
+          assignee: c.assignee,
+          points: c.points,
+          at: Date.now(),
+          title: c.title,
+        });
+        c.due = nextDue(c.due, c.recurring);
+        showFloater(choreEl, `+${c.points}`);
+      } else {
+        c.done = !c.done;
+        if (c.done) showFloater(choreEl, `+${c.points}`);
+      }
       render();
     } else if (action.dataset.action === 'delete') {
       state.chores = state.chores.filter(x => x.id !== id);
       render();
+    } else if (action.dataset.action === 'edit') {
+      startEdit(choreEl, id);
     }
   });
 
