@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Our Family Chores</title>
+<style>
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #2a2a32;
+    --muted: #7a7a85;
+    --line: #ece4d6;
+    --accent: #ff7a59;
+    --accent-soft: #ffe6df;
+    --teal: #2ec4b6;
+    --teal-soft: #d6f5f1;
+    --gold: #f4b860;
+    --shadow: 0 6px 20px rgba(40, 30, 20, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  header.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: 28px;
+    margin: 0 0 4px;
+    letter-spacing: -0.5px;
+  }
+  .hero .sub { color: var(--muted); font-size: 14px; }
+  .hero .date-pill {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--muted);
+    box-shadow: var(--shadow);
+  }
+
+  /* Members strip */
+  .members {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 4px 2px 12px;
+    margin-bottom: 20px;
+  }
+  .member {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 10px 14px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+  }
+  .member:hover { transform: translateY(-2px); }
+  .member.active { border-color: var(--accent); background: var(--accent-soft); }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center;
+    color: white; font-weight: 600; font-size: 14px;
+  }
+  .member-info .name { font-weight: 600; font-size: 14px; }
+  .member-info .points { font-size: 12px; color: var(--muted); }
+  .member.everyone .avatar {
+    background: linear-gradient(135deg, #ff7a59, #f4b860);
+  }
+
+  /* Add form */
+  .add-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .add-card h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .add-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 80px auto;
+    gap: 10px;
+  }
+  @media (max-width: 720px) {
+    .add-row { grid-template-columns: 1fr 1fr; }
+    .add-row .add-title { grid-column: 1 / -1; }
+    .add-row .add-submit { grid-column: 1 / -1; }
+  }
+  .add-row input, .add-row select {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+  }
+  .add-row input:focus, .add-row select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: white;
+  }
+  .add-submit {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: filter 0.12s;
+  }
+  .add-submit:hover { filter: brightness(0.95); }
+
+  /* Sections */
+  .section { margin-bottom: 28px; }
+  .section h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .count-pill {
+    background: var(--line);
+    color: var(--ink);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* Chores */
+  .chore {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    transition: opacity 0.2s;
+  }
+  .chore.done { opacity: 0.55; }
+  .chore.done .title { text-decoration: line-through; }
+  .chore .check {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    cursor: pointer;
+    display: grid; place-items: center;
+    flex: 0 0 auto;
+    transition: all 0.15s;
+    background: white;
+  }
+  .chore .check:hover { border-color: var(--accent); }
+  .chore.done .check {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: white;
+  }
+  .chore .check svg { display: none; width: 14px; height: 14px; }
+  .chore.done .check svg { display: block; }
+  .chore .body { flex: 1; min-width: 0; }
+  .chore .title { font-weight: 500; font-size: 15px; }
+  .chore .meta {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted); margin-top: 4px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .badge.due-today { background: #fff1d6; color: #b07a18; }
+  .badge.overdue { background: #ffd9d2; color: #b03a22; }
+  .points {
+    background: var(--teal-soft);
+    color: #1f7a70;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .chore .delete {
+    background: none; border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.12s;
+  }
+  .chore:hover .delete { opacity: 1; }
+  .chore .delete:hover { background: #ffe6e0; color: #b03a22; }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 24px;
+    font-size: 13px;
+    background: var(--card);
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+  }
+
+  /* Leaderboard */
+  .leaderboard {
+    background: linear-gradient(135deg, #fff7ed, #ffe6df);
+    border-radius: 16px;
+    padding: 18px;
+    margin-top: 32px;
+    border: 1px solid var(--line);
+  }
+  .leaderboard h2 { margin-top: 0; color: var(--ink); }
+  .lb-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.08);
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-weight: 700; color: var(--accent); width: 28px; }
+  .lb-name { flex: 1; font-weight: 500; }
+  .lb-score { color: #1f7a70; font-weight: 700; }
+  .crown { font-size: 16px; }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div>
+        <h1>🏡 Our Family Chores</h1>
+        <div class="sub">Tap a face to filter. Add chores, check them off, earn points.</div>
+      </div>
+      <div class="date-pill" id="dateLabel"></div>
+    </header>
+
+    <div class="members" id="members"></div>
+
+    <div class="add-card">
+      <h3>Add a chore</h3>
+      <form class="add-row" id="addForm">
+        <input class="add-title" id="newTitle" type="text" placeholder="e.g. Take out the trash" required />
+        <select id="newAssignee" required></select>
+        <input id="newDue" type="date" />
+        <input id="newPoints" type="number" min="1" max="50" value="5" />
+        <button class="add-submit" type="submit">＋ Add</button>
+      </form>
+    </div>
+
+    <section class="section" id="overdueSection" hidden>
+      <h2>Overdue <span class="count-pill" id="overdueCount">0</span></h2>
+      <div id="overdueList"></div>
+    </section>
+
+    <section class="section">
+      <h2>Today <span class="count-pill" id="todayCount">0</span></h2>
+      <div id="todayList"></div>
+    </section>
+
+    <section class="section">
+      <h2>This Week <span class="count-pill" id="weekCount">0</span></h2>
+      <div id="weekList"></div>
+    </section>
+
+    <section class="section">
+      <h2>Completed <span class="count-pill" id="doneCount">0</span></h2>
+      <div id="doneList"></div>
+    </section>
+
+    <div class="leaderboard">
+      <h2>🏆 This Week's Leaderboard</h2>
+      <div id="leaderboard"></div>
+    </div>
+
+    <footer>Prototype · data lives in your browser · <a href="#" id="resetBtn">reset demo data</a></footer>
+  </div>
+
+<script>
+  const STORAGE_KEY = 'family-chores-v1';
+
+  const FAMILY = [
+    { id: 'mom',  name: 'Mom',  color: '#ff7a59', emoji: '👩' },
+    { id: 'dad',  name: 'Dad',  color: '#2ec4b6', emoji: '👨' },
+    { id: 'aya',  name: 'Aya',  color: '#a06cd5', emoji: '🧒' },
+    { id: 'omar', name: 'Omar', color: '#f4b860', emoji: '👦' },
+  ];
+
+  function todayISO(offset = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const SEED = [
+    { id: crypto.randomUUID(), title: 'Take out the trash',     assignee: 'omar', due: todayISO(0),  points: 5,  done: false, createdAt: Date.now() },
+    { id: crypto.randomUUID(), title: 'Load the dishwasher',    assignee: 'aya',  due: todayISO(0),  points: 5,  done: false, createdAt: Date.now() },
+    { id: crypto.randomUUID(), title: 'Walk the dog',           assignee: 'dad',  due: todayISO(0),  points: 8,  done: true,  createdAt: Date.now() - 86400000 },
+    { id: crypto.randomUUID(), title: 'Vacuum living room',     assignee: 'mom',  due: todayISO(2),  points: 10, done: false, createdAt: Date.now() },
+    { id: crypto.randomUUID(), title: 'Water the plants',       assignee: 'aya',  due: todayISO(1),  points: 3,  done: false, createdAt: Date.now() },
+    { id: crypto.randomUUID(), title: 'Fold laundry',           assignee: 'mom',  due: todayISO(3),  points: 7,  done: false, createdAt: Date.now() },
+    { id: crypto.randomUUID(), title: 'Tidy bedroom',           assignee: 'omar', due: todayISO(-1), points: 6,  done: false, createdAt: Date.now() - 86400000 },
+    { id: crypto.randomUUID(), title: 'Empty dishwasher',       assignee: 'aya',  due: todayISO(-1), points: 5,  done: true,  createdAt: Date.now() - 86400000 },
+  ];
+
+  let state = load();
+  let activeFilter = 'all';
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { chores: SEED };
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function memberById(id) {
+    return FAMILY.find(m => m.id === id);
+  }
+
+  function pointsThisWeek(memberId) {
+    const weekAgo = Date.now() - 7 * 86400000;
+    return state.chores
+      .filter(c => c.done && c.assignee === memberId && c.createdAt >= weekAgo)
+      .reduce((s, c) => s + (c.points || 0), 0);
+  }
+
+  function renderMembers() {
+    const el = document.getElementById('members');
+    el.innerHTML = '';
+
+    const everyone = document.createElement('div');
+    everyone.className = 'member everyone' + (activeFilter === 'all' ? ' active' : '');
+    everyone.innerHTML = `
+      <div class="avatar">👪</div>
+      <div class="member-info">
+        <div class="name">Everyone</div>
+        <div class="points">${state.chores.filter(c => !c.done).length} active</div>
+      </div>`;
+    everyone.onclick = () => { activeFilter = 'all'; render(); };
+    el.appendChild(everyone);
+
+    FAMILY.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'member' + (activeFilter === m.id ? ' active' : '');
+      div.innerHTML = `
+        <div class="avatar" style="background:${m.color}">${m.emoji}</div>
+        <div class="member-info">
+          <div class="name">${m.name}</div>
+          <div class="points">${pointsThisWeek(m.id)} pts this week</div>
+        </div>`;
+      div.onclick = () => { activeFilter = m.id; render(); };
+      el.appendChild(div);
+    });
+  }
+
+  function renderAssigneeOptions() {
+    const sel = document.getElementById('newAssignee');
+    sel.innerHTML = FAMILY.map(m => `<option value="${m.id}">${m.emoji} ${m.name}</option>`).join('');
+  }
+
+  function choreCard(c) {
+    const m = memberById(c.assignee);
+    const today = todayISO(0);
+    let dueBadge = '';
+    if (!c.done && c.due) {
+      if (c.due < today) dueBadge = `<span class="badge overdue">Overdue · ${formatDue(c.due)}</span>`;
+      else if (c.due === today) dueBadge = `<span class="badge due-today">Due today</span>`;
+      else dueBadge = `<span style="color:var(--muted)">Due ${formatDue(c.due)}</span>`;
+    }
+    return `
+      <div class="chore ${c.done ? 'done' : ''}" data-id="${c.id}">
+        <div class="check" data-action="toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="body">
+          <div class="title">${escapeHtml(c.title)}</div>
+          <div class="meta">
+            <span class="badge" style="background:${m.color}22;color:${m.color}">
+              <span class="dot" style="background:${m.color}"></span>${m.name}
+            </span>
+            <span class="points">+${c.points} pts</span>
+            ${dueBadge}
+          </div>
+        </div>
+        <button class="delete" data-action="delete" title="Delete">×</button>
+      </div>`;
+  }
+
+  function formatDue(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function renderLists() {
+    const today = todayISO(0);
+    const weekEnd = todayISO(7);
+
+    const filtered = state.chores.filter(c =>
+      activeFilter === 'all' || c.assignee === activeFilter
+    );
+
+    const overdue = filtered.filter(c => !c.done && c.due && c.due < today);
+    const dueToday = filtered.filter(c => !c.done && c.due === today);
+    const thisWeek = filtered.filter(c => !c.done && c.due && c.due > today && c.due <= weekEnd);
+    const noDate = filtered.filter(c => !c.done && !c.due);
+    const done = filtered.filter(c => c.done);
+
+    const overdueSection = document.getElementById('overdueSection');
+    overdueSection.hidden = overdue.length === 0;
+    document.getElementById('overdueCount').textContent = overdue.length;
+    document.getElementById('overdueList').innerHTML = overdue.map(choreCard).join('');
+
+    document.getElementById('todayCount').textContent = dueToday.length;
+    document.getElementById('todayList').innerHTML = dueToday.length
+      ? dueToday.map(choreCard).join('')
+      : `<div class="empty">Nothing due today 🎉</div>`;
+
+    const weekItems = [...thisWeek, ...noDate];
+    document.getElementById('weekCount').textContent = weekItems.length;
+    document.getElementById('weekList').innerHTML = weekItems.length
+      ? weekItems.map(choreCard).join('')
+      : `<div class="empty">No upcoming chores</div>`;
+
+    document.getElementById('doneCount').textContent = done.length;
+    document.getElementById('doneList').innerHTML = done.length
+      ? done.map(choreCard).join('')
+      : `<div class="empty">Nothing checked off yet</div>`;
+  }
+
+  function renderLeaderboard() {
+    const ranked = [...FAMILY]
+      .map(m => ({ ...m, score: pointsThisWeek(m.id) }))
+      .sort((a, b) => b.score - a.score);
+    const el = document.getElementById('leaderboard');
+    el.innerHTML = ranked.map((m, i) => `
+      <div class="lb-row">
+        <span class="lb-rank">#${i + 1}</span>
+        <span class="lb-name">${m.emoji} ${m.name} ${i === 0 && m.score > 0 ? '<span class="crown">👑</span>' : ''}</span>
+        <span class="lb-score">${m.score} pts</span>
+      </div>
+    `).join('');
+  }
+
+  function render() {
+    renderMembers();
+    renderLists();
+    renderLeaderboard();
+    save();
+  }
+
+  document.getElementById('addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const title = document.getElementById('newTitle').value.trim();
+    if (!title) return;
+    const chore = {
+      id: crypto.randomUUID(),
+      title,
+      assignee: document.getElementById('newAssignee').value,
+      due: document.getElementById('newDue').value || null,
+      points: parseInt(document.getElementById('newPoints').value, 10) || 5,
+      done: false,
+      createdAt: Date.now(),
+    };
+    state.chores.unshift(chore);
+    document.getElementById('newTitle').value = '';
+    document.getElementById('newDue').value = '';
+    render();
+  });
+
+  document.body.addEventListener('click', e => {
+    const action = e.target.closest('[data-action]');
+    if (!action) return;
+    const choreEl = e.target.closest('.chore');
+    const id = choreEl?.dataset.id;
+    if (!id) return;
+    if (action.dataset.action === 'toggle') {
+      const c = state.chores.find(x => x.id === id);
+      if (c) c.done = !c.done;
+      render();
+    } else if (action.dataset.action === 'delete') {
+      state.chores = state.chores.filter(x => x.id !== id);
+      render();
+    }
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', e => {
+    e.preventDefault();
+    if (confirm('Reset to demo data?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      state = load();
+      render();
+    }
+  });
+
+  document.getElementById('dateLabel').textContent =
+    new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
+  renderAssigneeOptions();
+  document.getElementById('newDue').value = todayISO(0);
+  render();
+</script>
+</body>
+</html>
